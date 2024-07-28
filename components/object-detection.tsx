@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
-import { load as cocoSSDLoad } from "@tensorflow-models/coco-ssd";
-// import * as tf from "@tensorflow/tfjs";
-// import {renderPredictions} from "@/utils/render-predictions";
+import { load as cocoSSDLoad, ObjectDetection as CocoSSDObjectDetection } from "@tensorflow-models/coco-ssd";
+import * as tf from "@tensorflow/tfjs";
+import { renderPredictions } from "@/utils/render-predictions";
 
 type WebcamElement = Webcam & {
   video?: HTMLVideoElement;
@@ -20,21 +20,23 @@ let detectInterval;
 const ObjectDetection = () => {
   const [isLoading, setIsLoading] = useState(true);
 
-  // const webcamRef = useRef(null);
   const webcamRef = useRef<WebcamElement>(null);
   const canvasRef = useRef<CanvasElement>(null);
 
-  async function runCoco() {
+  const runCoco = useCallback(async () => {
     setIsLoading(true); // Set loading state to true when model loading starts
-    const net = await cocoSSDLoad();
+    await tf.setBackend("webgl"); // Ensure TensorFlow.js uses the WebGL backend
+    await tf.ready(); // Wait for the backend to be ready
+
+    const net: CocoSSDObjectDetection = await cocoSSDLoad();
     setIsLoading(false); // Set loading state to false when model loading completes
 
     detectInterval = setInterval(() => {
       runObjectDetection(net); // will build this next
     }, 10);
-  }
+  }, []);
 
-  async function runObjectDetection(net) {
+  async function runObjectDetection(net: CocoSSDObjectDetection) {
     if (
       canvasRef.current &&
       webcamRef.current !== null &&
@@ -50,10 +52,12 @@ const ObjectDetection = () => {
         0.6
       );
 
-      //     //   console.log(detectedObjects);
+      // console.log(detectedObjects);
 
       const context = canvasRef.current.getContext("2d");
-      renderPredictions(detectedObjects, context);
+      if (context) {
+        renderPredictions(detectedObjects, context);
+      }
     }
   }
 
@@ -71,9 +75,9 @@ const ObjectDetection = () => {
   };
 
   useEffect(() => {
-    // runCoco();
+    runCoco();
     showmyVideo();
-  }, []);
+  }, [runCoco]);
 
   return (
     <div className="mt-8">
