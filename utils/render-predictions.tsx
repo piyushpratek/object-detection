@@ -33,7 +33,7 @@ export const renderPredictions = (predictions: Prediction[], ctx: CanvasRenderin
     ctx.fillStyle = `rgba(255, 0, 0, ${isPerson ? 0.2 : 0})`; // Set the fill color to red
     ctx.fillRect(x, y, width, height);
 
-    // Draw the label background.
+    // Draw the label background
     ctx.fillStyle = isPerson ? "#FF0000" : "#00FFFF";
     const textWidth = ctx.measureText(prediction.class).width;
     const textHeight = parseInt(font, 10); // base 10
